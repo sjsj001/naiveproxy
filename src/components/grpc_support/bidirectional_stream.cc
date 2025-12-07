@@ -274,9 +274,10 @@ void BidirectionalStream::StartOnNetworkThread(
   request_info->extra_headers.SetHeaderIfMissing(
       net::HttpRequestHeaders::kUserAgent,
       request_context->http_user_agent_settings()->GetUserAgent());
+  auto* session = request_context->http_transaction_factory()->GetSession();
   bidi_stream_ = std::make_unique<net::BidirectionalStream>(
       std::move(request_info),
-      request_context->http_transaction_factory()->GetSession(),
+      session,
       !delay_headers_until_flush_, this);
   DCHECK(read_state_ == NOT_STARTED && write_state_ == NOT_STARTED);
   read_state_ = write_state_ = STARTED;
