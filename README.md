@@ -38,7 +38,8 @@ Based on NaiveProxy v140 (Chromium 140.0.7339.123).
 | File | API | Purpose |
 |------|-----|---------|
 | `src/components/cronet/native/include/cronet_c.h` | `Cronet_CreateCertVerifierWithRootCerts()` | Custom root certificate validation |
-| `src/components/cronet/native/engine.cc` | Implementation | Support custom CA certificates for testing |
+| `src/components/cronet/native/include/cronet_c.h` | `Cronet_CreateCertVerifierWithPublicKeySHA256()` | Certificate pinning by public key SHA256 hash |
+| `src/components/cronet/native/engine.cc` | Implementation | Support custom CA certificates and public key pinning |
 
 ### Custom Experimental Options
 

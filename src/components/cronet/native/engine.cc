@@ -35,6 +35,9 @@
 #include "net/cert/x509_certificate.h"
 #include "net/cert/x509_util.h"
 #include "net/url_request/url_request_context.h"
+#include "net/cert/asn1_util.h"
+#include "net/cert/cert_verify_result.h"
+#include "crypto/sha2.h"
 #include "third_party/boringssl/src/pki/cert_errors.h"
 #include "third_party/boringssl/src/pki/parse_certificate.h"
 #include "third_party/boringssl/src/pki/parsed_certificate.h"
@@ -583,6 +586,79 @@ class FixedCertVerifyProcFactory : public net::CertVerifyProcFactory {
   scoped_refptr<net::CertVerifyProc> verify_proc_;
 };
 
+// A CertVerifier that only verifies certificates by matching the public key
+// SHA256 hash, bypassing CA chain validation. This is similar to sing-box's
+// certificate_public_key_sha256 behavior.
+class PublicKeySHA256CertVerifier : public net::CertVerifier {
+ public:
+  explicit PublicKeySHA256CertVerifier(
+      std::vector<net::SHA256HashValue> allowed_hashes)
+      : allowed_hashes_(std::move(allowed_hashes)) {}
+
+  ~PublicKeySHA256CertVerifier() override = default;
+
+  int Verify(const RequestParams& params,
+             net::CertVerifyResult* verify_result,
+             net::CompletionOnceCallback callback,
+             std::unique_ptr<Request>* out_req,
+             const net::NetLogWithSource& net_log) override {
+    verify_result->Reset();
+
+    const auto& cert = params.certificate();
+    if (!cert) {
+      return net::ERR_CERT_INVALID;
+    }
+
+    // Extract SPKI from the leaf certificate
+    std::string_view spki;
+    if (!net::asn1::ExtractSPKIFromDERCert(
+            net::x509_util::CryptoBufferAsStringPiece(cert->cert_buffer()),
+            &spki)) {
+      return net::ERR_CERT_INVALID;
+    }
+
+    // Calculate SHA256 hash of SPKI
+    net::SHA256HashValue hash = crypto::SHA256Hash(base::as_byte_span(spki));
+
+    // Check if the hash matches any allowed hash
+    for (const auto& allowed : allowed_hashes_) {
+      if (hash == allowed) {
+        verify_result->verified_cert = cert;
+        verify_result->cert_status = 0;
+        verify_result->public_key_hashes.push_back(hash);
+        return net::OK;
+      }
+    }
+
+    verify_result->cert_status = net::CERT_STATUS_AUTHORITY_INVALID;
+    return net::ERR_CERT_AUTHORITY_INVALID;
+  }
+
+  void Verify2QwacBinding(
+      const std::string& binding,
+      const std::string& hostname,
+      const scoped_refptr<net::X509Certificate>& tls_cert,
+      base::OnceCallback<void(const scoped_refptr<net::X509Certificate>&)>
+          callback,
+      const net::NetLogWithSource& net_log) override {
+    std::move(callback).Run(nullptr);
+  }
+
+  void SetConfig(const Config& config) override {}
+
+  void AddObserver(Observer* observer) override {
+    observers_.AddObserver(observer);
+  }
+
+  void RemoveObserver(Observer* observer) override {
+    observers_.RemoveObserver(observer);
+  }
+
+ private:
+  std::vector<net::SHA256HashValue> allowed_hashes_;
+  base::ObserverList<Observer> observers_;
+};
+
 }  // namespace
 
 CRONET_EXPORT void* Cronet_CreateCertVerifierWithRootCerts(
@@ -651,5 +727,33 @@ CRONET_EXPORT void* Cronet_CreateCertVerifierWithRootCerts(
   auto* verifier = new net::MultiThreadedCertVerifier(
       std::move(verify_proc), std::move(verify_proc_factory));
 
+  return verifier;
+}
+
+CRONET_EXPORT void* Cronet_CreateCertVerifierWithPublicKeySHA256(
+    const uint8_t** hashes,
+    size_t hash_count) {
+  cronet::EnsureInitialized();
+
+  if (!hashes || hash_count == 0) {
+    LOG(ERROR) << "CreateCertVerifierWithPublicKeySHA256: No hashes provided";
+    return nullptr;
+  }
+
+  std::vector<net::SHA256HashValue> allowed_hashes;
+  allowed_hashes.reserve(hash_count);
+
+  for (size_t i = 0; i < hash_count; ++i) {
+    if (!hashes[i]) {
+      LOG(ERROR) << "CreateCertVerifierWithPublicKeySHA256: Null hash at index "
+                 << i;
+      return nullptr;
+    }
+    net::SHA256HashValue hash;
+    memcpy(hash.data(), hashes[i], hash.size());
+    allowed_hashes.push_back(hash);
+  }
+
+  auto* verifier = new PublicKeySHA256CertVerifier(std::move(allowed_hashes));
   return verifier;
 }

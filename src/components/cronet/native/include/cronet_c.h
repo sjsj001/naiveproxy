@@ -40,6 +40,19 @@ CRONET_EXPORT stream_engine* Cronet_Engine_GetStreamEngine(
 CRONET_EXPORT void* Cronet_CreateCertVerifierWithRootCerts(
     const char* pem_root_certs);
 
+// Creates a CertVerifier that validates certificates by matching the public key
+// SHA256 hash, bypassing CA chain validation. This is similar to sing-box's
+// certificate_public_key_sha256 behavior.
+// hashes: Array of pointers to 32-byte SHA256 hashes (raw binary, not base64).
+// hash_count: Number of hashes in the array.
+// Returns a pointer to the created net::CertVerifier.
+// The caller is responsible for passing it to
+// Cronet_Engine_SetMockCertVerifierForTesting() which takes ownership.
+// Returns nullptr if no hashes provided or invalid input.
+CRONET_EXPORT void* Cronet_CreateCertVerifierWithPublicKeySHA256(
+    const uint8_t** hashes,
+    size_t hash_count);
+
 #ifdef __cplusplus
 }
 #endif
