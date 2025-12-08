@@ -39,3 +39,19 @@ Based on NaiveProxy v140 (Chromium 140.0.7339.123).
 |------|-----|---------|
 | `src/components/cronet/native/include/cronet_c.h` | `Cronet_CreateCertVerifierWithRootCerts()` | Custom root certificate validation |
 | `src/components/cronet/native/engine.cc` | Implementation | Support custom CA certificates for testing |
+
+### Custom Experimental Options
+
+| Option | Parameters | Purpose |
+|--------|------------|---------|
+| `DnsServerOverride` | `nameservers`: list of `"ip:port"` | Override DNS nameservers for the built-in async DNS client |
+
+Example:
+```json
+{
+  "AsyncDNS": {"enable": true},
+  "DnsServerOverride": {"nameservers": ["127.0.0.1:5353"]}
+}
+```
+
+This allows redirecting DNS queries to a local DNS forwarder for custom DNS routing.
