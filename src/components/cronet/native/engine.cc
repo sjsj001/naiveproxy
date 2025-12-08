@@ -119,10 +119,12 @@ Cronet_RESULT Cronet_EngineImpl::StartWithParams(
   cronet::EnsureInitialized();
   base::AutoLock lock(lock_);
 
-  enable_check_result_ = params->enable_check_result;
   if (context_) {
-    return CheckResult(Cronet_RESULT_ILLEGAL_STATE_ENGINE_ALREADY_STARTED);
+    // Return error directly without CheckResult to avoid assertion failure
+    // when enable_check_result_ was set to true by a previous successful call.
+    return Cronet_RESULT_ILLEGAL_STATE_ENGINE_ALREADY_STARTED;
   }
+  enable_check_result_ = params->enable_check_result;
 
   URLRequestContextConfigBuilder context_config_builder;
   context_config_builder.enable_quic = params->enable_quic;
