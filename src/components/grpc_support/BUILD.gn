@@ -6,7 +6,7 @@ source_set("headers") {
   public = [ "include/bidirectional_stream_c.h" ]
 }
 
-static_library("grpc_support") {
+source_set("grpc_support") {
   sources = [
     "bidirectional_stream.cc",
     "bidirectional_stream.h",
