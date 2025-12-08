@@ -208,10 +208,16 @@ void BidirectionalStream::StartRequest() {
   http_request_info.method = request_info_->method;
   http_request_info.extra_headers = request_info_->extra_headers;
   http_request_info.socket_tag = request_info_->socket_tag;
+  http_request_info.network_anonymization_key =
+      request_info_->network_anonymization_key;
+  // Disable IP-based pooling when NAK is set (for insecure-concurrency).
+  // This ensures connections with different NAKs use separate HTTP/2 sessions.
+  bool enable_ip_based_pooling =
+      !request_info_->network_anonymization_key.IsTransient();
   stream_request_ =
       session_->http_stream_factory()->RequestBidirectionalStreamImpl(
           http_request_info, request_info_->priority, /*allowed_bad_certs=*/{},
-          this, /* enable_ip_based_pooling_for_h2 = */ true,
+          this, enable_ip_based_pooling,
           /* enable_alternative_services = */ true, net_log_);
   // Check that this call does not fail.
   DCHECK(stream_request_);

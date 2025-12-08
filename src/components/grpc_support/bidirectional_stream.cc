@@ -274,6 +274,8 @@ void BidirectionalStream::StartOnNetworkThread(
   request_info->extra_headers.SetHeaderIfMissing(
       net::HttpRequestHeaders::kUserAgent,
       request_context->http_user_agent_settings()->GetUserAgent());
+  // Set network anonymization key for connection pool isolation.
+  request_info->network_anonymization_key = network_anonymization_key_;
   auto* session = request_context->http_transaction_factory()->GetSession();
   bidi_stream_ = std::make_unique<net::BidirectionalStream>(
       std::move(request_info),
