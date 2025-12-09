@@ -108,4 +108,20 @@ if (false) {
     configs -= [ "//build/config/compiler:thin_archive" ]
   }
 
+  # Sample executable that links against cronet_static.
+  # Used to extract linking parameters from the generated ninja file.
+  executable("cronet_sample") {
+    testonly = true
+    sources = [
+      "native/sample/main.cc",
+      "native/sample/sample_executor.cc",
+      "native/sample/sample_executor.h",
+      "native/sample/sample_url_request_callback.cc",
+      "native/sample/sample_url_request_callback.h",
+    ]
+    deps = [
+      ":cronet_static",
+      "//components/cronet/native:cronet_native_headers",
+    ]
+  }
 }
