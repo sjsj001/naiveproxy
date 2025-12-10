@@ -70,3 +70,19 @@ Example:
 ```
 
 This allows redirecting DNS queries to a local DNS forwarder for custom DNS routing.
+
+### Android Stub Files
+
+For Android builds without JNI (native-only Go binding), stub implementations replace JNI-dependent code:
+
+| File | Replaces | Purpose |
+|------|----------|---------|
+| `src/base/android/path_utils_stub.cc` | `path_utils.cc` | Returns empty paths (cache/native lib dirs not needed) |
+| `src/base/android/input_hint_checker_stub.cc` | `input_hint_checker.cc` | No-op (UI input detection not needed for network) |
+| `src/base/android/android_info_stub.cc` | `android_info.cc` | Uses `__system_property_get` instead of JNI |
+| `src/base/android/java_runtime_stub.cc` | `java_runtime.cc` | Returns 0 for Java heap memory (no JVM) |
+| `src/components/prefs/android/pref_service_android_stub.cc` | `pref_service_android.cc` | No-op (Java preference bindings not needed) |
+| `src/net/android/network_change_notifier_android_stub.cc` | `network_change_notifier_android.cc` | Provides `NetworkChangeCalculatorParamsAndroid()` only |
+| `src/net/proxy_resolution/proxy_config_service_android_stub.cc` | `proxy_config_service_android.cc` | Returns direct (no proxy) configuration |
+
+These stubs resolve linker errors when building cronet for Android without the full Chromium Java/JNI infrastructure.
