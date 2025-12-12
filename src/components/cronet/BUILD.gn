@@ -125,10 +125,11 @@ if (false) {
     ]
   }
 
-  # Shared library for Windows (purego mode requires DLL).
+  # Shared library for Windows and Linux (purego mode).
   # On Windows, Go's CGO cannot link MSVC-compiled static libraries,
   # so we provide a DLL for runtime loading via purego + memmod.
-  if (is_win) {
+  # On Linux, shared library is provided for purego mode and release distribution.
+  if (is_win || is_linux) {
     shared_library("cronet") {
       deps = [
         "//base",
