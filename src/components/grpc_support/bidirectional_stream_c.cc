@@ -6,9 +6,7 @@
 
 #include <stdbool.h>
 
-#include <map>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
 
@@ -24,7 +22,6 @@
 #include "components/grpc_support/bidirectional_stream.h"
 #include "net/base/io_buffer.h"
 #include "net/base/net_errors.h"
-#include "net/base/network_anonymization_key.h"
 #include "net/base/request_priority.h"
 #include "net/http/bidirectional_stream.h"
 #include "net/http/bidirectional_stream_request_info.h"
@@ -39,24 +36,6 @@
 #include "url/gurl.h"
 
 namespace {
-
-// Global NAK cache to ensure the same index returns the same NAK.
-// Consistent with naiveproxy behavior: all indices use transient NAK.
-std::mutex g_nak_cache_mutex;
-std::map<int, net::NetworkAnonymizationKey> g_nak_cache;
-
-const net::NetworkAnonymizationKey& GetCachedNAK(int index) {
-  DCHECK(index >= 0);
-  std::lock_guard<std::mutex> lock(g_nak_cache_mutex);
-  auto it = g_nak_cache.find(index);
-  if (it == g_nak_cache.end()) {
-    // First access to this index, create and cache a transient NAK.
-    auto [inserted_it, success] = g_nak_cache.emplace(
-        index, net::NetworkAnonymizationKey::CreateTransient());
-    return inserted_it->second;
-  }
-  return it->second;
-}
 
 class HeadersArray : public bidirectional_stream_header_array {
  public:
@@ -113,12 +92,6 @@ class BidirectionalStreamAdapter final
   BidirectionalStreamAdapter(stream_engine* engine,
                              void* annotation,
                              const bidirectional_stream_callback* callback);
-
-  // Sets the concurrency index for connection pool isolation.
-  void SetConcurrencyIndex(int index) {
-    DCHECK(index >= 0);
-    bidirectional_stream_->set_network_anonymization_key(GetCachedNAK(index));
-  }
 
   void OnStreamReady() override;
 
@@ -325,13 +298,4 @@ void bidirectional_stream_flush(bidirectional_stream* stream) {
 
 void bidirectional_stream_cancel(bidirectional_stream* stream) {
   BidirectionalStreamAdapter::GetStream(stream)->Cancel();
-}
-
-void bidirectional_stream_set_concurrency_index(bidirectional_stream* stream,
-                                                int index) {
-  DCHECK(stream);
-  DCHECK(index >= 0);
-  BidirectionalStreamAdapter* adapter =
-      static_cast<BidirectionalStreamAdapter*>(stream->obj);
-  adapter->SetConcurrencyIndex(index);
 }

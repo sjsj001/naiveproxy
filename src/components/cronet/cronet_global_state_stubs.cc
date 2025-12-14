@@ -12,7 +12,6 @@
 #include "base/notimplemented.h"
 #include "base/task/thread_pool.h"
 #include "base/task/thread_pool/thread_pool_instance.h"
-#include "net/base/network_anonymization_key.h"
 #include "net/proxy_resolution/configured_proxy_resolution_service.h"
 #include "net/proxy_resolution/proxy_config_service.h"
 
@@ -36,10 +35,6 @@ scoped_refptr<base::SingleThreadTaskRunner> InitializeAndCreateTaskRunner() {
   base::CommandLine::Init(0, nullptr);
 
   base::FeatureList::InitInstance(std::string(), std::string());
-
-  // Enable NAK partitioning to allow separate connection pools per NAK.
-  // This is required for insecure_concurrency feature.
-  net::NetworkAnonymizationKey::PartitionByDefault();
 
   // Note that in component builds this ThreadPoolInstance will be shared with
   // the calling process, if it also depends on //base. In particular this means

@@ -238,15 +238,6 @@ void bidirectional_stream_cancel(bidirectional_stream* stream);
 GRPC_SUPPORT_EXPORT
 bool bidirectional_stream_is_done(bidirectional_stream* stream);
 
-/* Sets the connection pool isolation index for insecure-concurrency feature.
- * index: 0 to N-1, consistent with naiveproxy's insecure-concurrency behavior.
- * Connections with the same index will reuse the same HTTP/2 connection.
- * Must be called before bidirectional_stream_start().
- */
-GRPC_SUPPORT_EXPORT
-void bidirectional_stream_set_concurrency_index(bidirectional_stream* stream,
-                                                int index);
-
 #ifdef __cplusplus
 }
 #endif

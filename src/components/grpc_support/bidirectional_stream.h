@@ -12,7 +12,6 @@
 #include "base/memory/ref_counted.h"
 #include "base/memory/weak_ptr.h"
 #include "base/synchronization/lock.h"
-#include "net/base/network_anonymization_key.h"
 #include "net/http/bidirectional_stream.h"
 #include "net/third_party/quiche/src/quiche/common/http/http_header_block.h"
 #include "net/url_request/url_request_context_getter.h"
@@ -81,12 +80,6 @@ class BidirectionalStream : public net::BidirectionalStream::Delegate {
   // Delays sending request headers until first call to Flush().
   void delay_headers_until_flush(bool delay_headers_until_flush) {
     delay_headers_until_flush_ = delay_headers_until_flush;
-  }
-
-  // Sets the network anonymization key for connection pool isolation.
-  void set_network_anonymization_key(
-      const net::NetworkAnonymizationKey& network_anonymization_key) {
-    network_anonymization_key_ = network_anonymization_key;
   }
 
   // Validates method and headers, initializes and starts the request. If
@@ -232,8 +225,6 @@ class BidirectionalStream : public net::BidirectionalStream::Delegate {
 
   bool disable_auto_flush_;
   bool delay_headers_until_flush_;
-
-  net::NetworkAnonymizationKey network_anonymization_key_;
 
   const raw_ptr<net::URLRequestContextGetter> request_context_getter_;
 

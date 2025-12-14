@@ -43,7 +43,6 @@
 #include "components/cronet/version.h"
 #include "net/android/network_change_notifier_delegate_android.h"
 #include "net/android/network_change_notifier_factory_android.h"
-#include "net/base/network_anonymization_key.h"
 #include "net/base/network_change_notifier.h"
 #include "net/log/net_log.h"
 #include "net/log/net_log_capture_mode.h"
@@ -182,10 +181,6 @@ void JNI_CronetLibraryLoader_NativeInit(JNIEnv* env,
   }
 
   ApplyBaseFeatureOverrides(GetBaseFeatureOverrides(env));
-
-  // Enable NAK partitioning to allow separate connection pools per NAK.
-  // This is required for insecure_concurrency feature.
-  net::NetworkAnonymizationKey::PartitionByDefault();
 
   if (base::FeatureList::IsEnabled(kLogMe)) {
     LOG(/* Bypass log spam warning regex */ INFO)

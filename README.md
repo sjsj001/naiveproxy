@@ -40,20 +40,6 @@ Based on NaiveProxy v140 (Chromium 140.0.7339.123).
 | `src/components/cronet/native/include/cronet_c.h` | `Cronet_CreateCertVerifierWithRootCerts()` | Custom root certificate validation |
 | `src/components/cronet/native/include/cronet_c.h` | `Cronet_CreateCertVerifierWithPublicKeySHA256()` | Certificate pinning by public key SHA256 hash |
 | `src/components/cronet/native/engine.cc` | Implementation | Support custom CA certificates and public key pinning |
-| `src/components/grpc_support/include/bidirectional_stream_c.h` | `bidirectional_stream_set_concurrency_index()` | HTTP/2 connection pool isolation for insecure concurrency |
-
-### Insecure Concurrency Support
-
-Added support for HTTP/2 connection pool isolation using `NetworkAnonymizationKey` (NAK). This allows multiple independent HTTP/2 sessions to be created to the same server by assigning different concurrency indices.
-
-| File | Change |
-|------|--------|
-| `src/components/grpc_support/bidirectional_stream_c.cc` | Global NAK cache with per-index transient NAK creation |
-| `src/components/grpc_support/bidirectional_stream.h/cc` | NAK member and setter for BidirectionalStream |
-| `src/net/http/bidirectional_stream_request_info.h` | NAK field in request info |
-| `src/net/http/bidirectional_stream.cc` | Pass NAK to HttpStreamFactory, disable IP-based pooling for transient NAK |
-| `src/components/cronet/cronet_global_state_stubs.cc` | Enable NAK partitioning via `PartitionByDefault()` |
-| `src/components/cronet/android/cronet_library_loader.cc` | Enable NAK partitioning for Android |
 
 ### Custom Experimental Options
 
