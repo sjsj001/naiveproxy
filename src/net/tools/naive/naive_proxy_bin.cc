@@ -195,7 +195,7 @@ std::unique_ptr<URLRequestContext> BuildURLRequestContext(
   // that is visible to proxy servers, though this is only exploitable
   // if the proxy servers can be MITM'd.
 
-  constexpr int kMaxBandwidthMBps = 125;
+  constexpr int kMaxBandwidthMBps = 250;
   constexpr double kTypicalRttSecond = 0.256;
   constexpr int kMaxBdpMB = kMaxBandwidthMBps * kTypicalRttSecond;
 
