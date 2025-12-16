@@ -32,6 +32,8 @@
 #include "net/dns/context_host_resolver.h"
 #include "net/dns/host_resolver.h"
 #include "net/dns/mapped_host_resolver.h"
+#include "net/dns/public/dns_over_https_config.h"
+#include "net/dns/public/secure_dns_mode.h"
 #include "net/dns/stale_host_resolver.h"
 #include "net/http/http_network_session.h"
 #include "net/http/http_server_properties.h"
@@ -856,8 +858,19 @@ void URLRequestContextConfig::SetContextBuilderExperimentalOptions(
       host_resolver_manager_options.https_svcb_options = https_svcb_options;
     }
     if (dns_server_override_enable) {
+      // Use CreateOverridingEverythingWithDefaults to completely ignore system DNS config
+      host_resolver_manager_options.dns_config_overrides =
+          net::DnsConfigOverrides::CreateOverridingEverythingWithDefaults();
+      // Override with our custom nameservers
       host_resolver_manager_options.dns_config_overrides.nameservers =
           dns_server_override_nameservers;
+      // Fully disable Secure DNS (DoH) to force using the configured nameservers
+      host_resolver_manager_options.dns_config_overrides.secure_dns_mode =
+          net::SecureDnsMode::kOff;
+      host_resolver_manager_options.dns_config_overrides.allow_dns_over_https_upgrade =
+          false;
+      host_resolver_manager_options.dns_config_overrides.dns_over_https_config =
+          net::DnsOverHttpsConfig();  // Empty config, no DoH servers
     }
 
     if (!is_network_bound) {
