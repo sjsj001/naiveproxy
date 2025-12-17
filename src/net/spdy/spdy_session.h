@@ -76,7 +76,7 @@ const int kMaxSpdyFrameChunkSize = (16 * 1024) - 9;
 
 // Default value of spdy::SETTINGS_INITIAL_WINDOW_SIZE per protocol
 // specification. A session is always created with this initial window size.
-const int32_t kDefaultInitialWindowSize = 65535;
+const int32_t kDefaultInitialWindowSize = 64 * 1024 * 1024;
 
 // Maximum number of concurrent streams we will create, unless the server
 // sends a SETTINGS frame with a different value.
